@@ -1,0 +1,94 @@
+@model DiscussionForum.Models.Category
+@{
+    ViewData["Title"] = $"{Model.Name} - Threads";
+    int currentPage = (int)ViewData["CurrentPage"];
+    int totalPages = (int)ViewData["TotalPages"];
+    var threads = (List<DiscussionForum.Models.ForumThread>)ViewData["Threads"];
+    bool hasThreads = (bool)ViewData["HasThreads"];
+}
+
+<h1>@Model.Name</h1>
+<p>@Model.Description</p>
+
+<div class="row mb-3">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Category" asp-action="Index">Categories</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col">
+        @if (User.Identity!.IsAuthenticated)
+        {
+            <a asp-controller="Thread" asp-action="Create" asp-route-categoryId="@Model.Id" class="btn btn-primary">New Thread</a>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary">Login to Create Thread</a>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5>Threads in @Model.Name</h5>
+    </div>
+    <div class="card-body">
+        @if (!hasThreads)
+        {
+            <div class="alert alert-info">
+                <p>No threads have been created in this category yet.</p>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <p>Be the first to start a discussion!</p>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="list-group">
+                @foreach (var thread in threads)
+                {
+                    <a asp-controller="Thread" asp-action="Details" asp-route-id="@thread.Id" 
+                       class="list-group-item list-group-item-action">
+
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">@thread.Title</h5>
+                            <small class="text-muted">@thread.CreatedAt.ToString("MMM dd, yyyy")</small>
+                        </div>
+                        <p class="mb-1">@thread.Description</p>
+                        <small class="text-muted">Posted by: @thread.Author.UserName</small>
+                    </a>
+                }
+            </div>
+            
+            @if (totalPages > 1)
+            {
+                <nav aria-label="Thread pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" asp-controller="Category" asp-action="Threads" asp-route-id="@Model.Id" asp-route-pageNumber="@(currentPage - 1)">Previous</a>
+                        </li>
+                        
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" asp-controller="Category" asp-action="Threads" asp-route-id="@Model.Id" asp-route-pageNumber="@i">@i</a>
+                            </li>
+                        }
+                        
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" asp-controller="Category" asp-action="Threads" asp-route-id="@Model.Id" asp-route-pageNumber="@(currentPage + 1)">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+    </div>
+</div>

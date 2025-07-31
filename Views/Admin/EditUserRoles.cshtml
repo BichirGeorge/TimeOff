@@ -1,0 +1,39 @@
+@model DiscussionForum.Models.EditUserRolesViewModel
+@{
+    ViewData["Title"] = "Edit User Roles";
+}
+
+<h1>Edit Roles for @Model.UserName</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="UserId" />
+            <input type="hidden" asp-for="UserName" />
+
+            <div class="card">
+                <div class="card-header">
+                    <h4>Select Roles</h4>
+                </div>
+                <div class="card-body">
+                    @for (int i = 0; i < Model.Roles.Count; i++)
+                    {
+                        <div class="form-check">
+                            <input type="hidden" asp-for="@Model.Roles[i].RoleId" />
+                            <input type="hidden" asp-for="@Model.Roles[i].RoleName" />
+                            <input asp-for="@Model.Roles[i].IsSelected" class="form-check-input" />
+                            <label class="form-check-label" asp-for="@Model.Roles[i].IsSelected">
+                                @Model.Roles[i].RoleName
+                            </label>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">Update</button>
+                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

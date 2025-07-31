@@ -1,0 +1,138 @@
+@model DiscussionForum.Models.ForumThread
+@{
+    ViewData["Title"] = Model.Title;
+    var posts = ViewData["Posts"] as List<DiscussionForum.Models.Post>;
+    var currentSort = ViewData["CurrentSort"] as string;
+    var currentUserId = ViewData["CurrentUserId"]?.ToString();
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Category" asp-action="Index">Categories</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Category" asp-action="Threads" asp-route-id="@Model.CategoryId">@Model.Category.Name</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">@Model.Title</h4>
+        <div>
+            @if (User.Identity!.IsAuthenticated && 
+                 (User.IsInRole("Moderator") || currentUserId == Model.AuthorId))
+            {
+                <div class="btn-group" role="group">
+                    <a asp-controller="Thread" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+
+                    @if (User.IsInRole("Moderator"))
+                    {
+                        <a asp-controller="Thread" asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                    }
+                </div>
+            }
+
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+            <div>
+                <h6 class="card-subtitle mb-2 text-muted">Posted by: @Model.Author.UserName</h6>
+            </div>
+            <div>
+                <small class="text-muted">
+                    @Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                    @if (Model.UpdatedAt != null)
+                    {
+                        <span>(edited on @Model.UpdatedAt?.ToString("MMM dd, yyyy HH:mm"))</span>
+                    }
+                </small>
+            </div>
+        </div>
+        <p class="card-text mt-3">@Model.Description</p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Replies (@(posts?.Count ?? 0))</h5>
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                Sort by
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
+                <li><a class="dropdown-item @(currentSort == "dateDesc" ? "active" : "")" asp-controller="Thread" asp-action="Details" asp-route-id="@Model.Id" asp-route-sortBy="dateDesc">Newest first</a></li>
+                <li><a class="dropdown-item @(currentSort == "dateAsc" ? "active" : "")" asp-controller="Thread" asp-action="Details" asp-route-id="@Model.Id" asp-route-sortBy="dateAsc">Oldest first</a></li>
+                <li><a class="dropdown-item @(currentSort == "author" ? "active" : "")" asp-controller="Thread" asp-action="Details" asp-route-id="@Model.Id" asp-route-sortBy="author">By author name</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="card-body">
+        @if (posts == null || !posts.Any())
+        {
+            <div class="alert alert-info">
+                <p>No replies yet. Be the first to reply!</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var post in posts)
+            {
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><strong>@post.Author.UserName</strong></span>
+                        <small class="text-muted">@post.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">@post.Content</p>
+                    </div>
+        
+                    @if (User.Identity.IsAuthenticated && 
+                         (User.IsInRole("Moderator") || currentUserId == post.AuthorId))
+                    {
+                        <div class="card-footer text-end">
+                            <div class="btn-group" role="group">
+                                <a asp-controller="Post" asp-action="Edit" asp-route-id="@post.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+
+                                @if (User.IsInRole("Moderator"))
+                                {
+                                    <a asp-controller="Post" asp-action="Delete" asp-route-id="@post.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+        }
+    </div>
+</div>
+
+@if (User.Identity.IsAuthenticated)
+{
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Post a Reply</h5>
+        </div>
+        <div class="card-body">
+            <form asp-controller="Post" asp-action="Create" method="post">
+                <input type="hidden" name="ThreadId" value="@Model.Id" />
+                <div class="mb-3">
+                    <label for="Content" class="form-label">Your Reply</label>
+                    <textarea class="form-control custom-textarea" id="Content" name="Content" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Post Reply</button>
+            </form>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        <p>Please <a asp-area="Identity" asp-page="/Account/Login">login</a> to post a reply.</p>
+    </div>
+}

@@ -1,0 +1,55 @@
+@model DiscussionForum.Models.SearchResultsViewModel
+@{
+    ViewData["Title"] = "Search Results";
+}
+
+<h2>Search results for “@Model.Query”</h2>
+
+@if (string.IsNullOrWhiteSpace(Model.Query))
+{
+    <p>Please enter a search term.</p>
+}
+else if (!Model.Threads.Any() && !Model.Posts.Any())
+{
+    <p>No results found for “@Model.Query”.</p>
+}
+else
+{
+    <div class="mb-4">
+        <h4>Threads (@Model.Threads.Count)</h4>
+        @if (Model.Threads.Any())
+        {
+            <ul class="list-group">
+                @foreach (var t in Model.Threads)
+                {
+                    <li class="list-group-item">
+                        <a asp-controller="Thread" asp-action="Details" asp-route-id="@t.Id">
+                            @t.Title
+                        </a>
+                        <small class="text-muted">in @t.Category.Name</small>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+
+    <div>
+        <h4>Posts (@Model.Posts.Count)</h4>
+        @if (Model.Posts.Any())
+        {
+            <ul class="list-group">
+                @foreach (var p in Model.Posts)
+                {
+                    <li class="list-group-item">
+                        <a asp-controller="Thread"
+                           asp-action="Details"
+                           asp-route-id="@p.ThreadId">
+                            Reply in “@p.Thread.Title”
+                        </a>
+                        <p class="mb-0">@((p.Content.Length > 100) ? p.Content.Substring(0, 100) + "…" : p.Content)</p>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+}
